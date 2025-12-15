@@ -1,6 +1,7 @@
 import { validateRequiredFields } from '../shared/validateRequiredField'
 import { connectToDatabase } from '../../db/connection'
 import { makeResponse } from '../shared/makeResponse'
+import * as couchbase from 'couchbase'
 
 const createAirline = async (req, res) => {
   const requiredFields = ['name', 'icao', 'country', 'callsign']
@@ -112,7 +113,10 @@ const listAirlinesToAirport = async (req, res) => {
 		LIMIT $LIMIT
 		OFFSET $OFFSET;
       `
-  options = { parameters: { AIRPORT: airport, LIMIT: limit, OFFSET: offset } }
+  options = {
+    parameters: { AIRPORT: airport, LIMIT: limit, OFFSET: offset },
+    scanConsistency: couchbase.QueryScanConsistency.RequestPlus,
+  }
   await makeResponse(res, async () => {
     let results = await scope.query(query, options)
     return results['rows']
